@@ -3,11 +3,15 @@ services:
     image: localstack/localstack
     ports:
       - "4566:4566"
+      - "4571:4571" # lambda実行用のポート
     environment:
       - SERVICES=secretsmanager,lambda,s3
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=ap-northeast-1
+      - LAMBDA_EXECUTOR=docker        # Lambda実行モードを指定
+      - LAMBDA_REMOTE_DOCKER=false    # ローカルDockerを使用
+      - LOCALSTACK_DATA_DIR=/var/lib/localstack/data # 一時ファイル用フォルダ
     volumes:
       - type: bind
         source: ./init/ready.d
@@ -17,7 +21,10 @@ services:
         source: secrets.json
         target: /etc/localstack/init/secrets.json
         read_only: true
-
+      - localstack-data:/var/lib/localstack        # LocalStack用の一時ファイル
+      - "/var/run/docker.sock:/var/run/docker.sock" # Dockerソケットのマウント
+    networks:
+      - local-network
   postgres:
     image: postgres:14
     ports:
@@ -28,6 +35,14 @@ services:
       POSTGRES_DB: testdb
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - local-network
 
 volumes:
   postgres-data:
+  localstack-data:
+    driver: local
+
+networks:
+  local-network:
+    driver: bridge
