@@ -5,13 +5,16 @@ services:
       - "4566:4566"
       - "4571:4571" # lambda実行用のポート
     environment:
-      - SERVICES=secretsmanager,lambda,s3
+      - SERVICES=secretsmanager,lambda,s3,logs
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=ap-northeast-1
       - LAMBDA_EXECUTOR=docker        # Lambda実行モードを指定
       - LAMBDA_REMOTE_DOCKER=false    # ローカルDockerを使用
       - LOCALSTACK_DATA_DIR=/var/lib/localstack/data # 一時ファイル用フォルダ
+      - LS_LOG=trace # デバッグ用の追加設定
+      - LAMBDA_ENDPOINT_URL=http://localstack:4566 # Lambda関数がSecretsManagerにアクセスできるようにエンドポイントを設定
+      - LAMBDA_DOCKER_NETWORK=local-network # Lambda関数がSecretsManagerにアクセスできるようにネットワークを設定
     volumes:
       - type: bind
         source: ./init/ready.d
@@ -25,6 +28,12 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock" # Dockerソケットのマウント
     networks:
       - local-network
+    healthcheck: # LocalStackの起動を待つためのヘルスチェックを追加
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   postgres:
     image: postgres:14
     ports:
@@ -37,6 +46,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - local-network
+    healthcheck: # PostgreSQLの起動を待つためのヘルスチェックを追加
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres-data:
