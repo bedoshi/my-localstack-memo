@@ -1,18 +1,22 @@
-version: '3.8'
-
 services:
   localstack:
     image: localstack/localstack
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=rds,secretsmanager,lambda,s3
+      - SERVICES=secretsmanager,lambda,s3
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=ap-northeast-1
     volumes:
-      - "${LOCALAPPDATA}/localstack:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - type: bind
+        source: ./init/ready.d
+        target: /etc/localstack/init/ready.d
+        read_only: false
+      - type: bind
+        source: secrets.json
+        target: /etc/localstack/init/secrets.json
+        read_only: true
 
   postgres:
     image: postgres:14
