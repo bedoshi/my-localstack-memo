@@ -9,7 +9,7 @@ def get_secret():
     client = session.client(
         service_name='secretsmanager',
         endpoint_url='http://localhost:4566',
-        region_name='us-east-1',
+        region_name='ap-northeast-1',
         aws_access_key_id='test',
         aws_secret_access_key='test'
     )

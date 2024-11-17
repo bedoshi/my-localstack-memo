@@ -6,7 +6,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=rds,secretsmanager,lambda
+      - SERVICES=rds,secretsmanager,lambda,s3
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=ap-northeast-1
